@@ -116,10 +116,6 @@
             transform: translateY(-2px);
         }
 
-        .btn-secondary {
-            background: #6c757d;
-        }
-
         .status-message {
             padding: 15px;
             border-radius: 8px;
@@ -241,25 +237,12 @@
             opacity: 0.9;
         }
 
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-            margin-top: 20px;
+        .tab-content {
+            display: none;
         }
 
-        .pagination button {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            background: white;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-
-        .pagination button.active {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
+        .tab-content.show {
+            display: block;
         }
 
         @media (max-width: 768px) {
@@ -288,17 +271,12 @@
             table td {
                 padding: 10px;
             }
-
-            .stats {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- ส่วน Header -->
     <div class="header">
         <h1>📊 รายงานวิดีโอการแพ็คสินค้า</h1>
         <div class="header-actions">
@@ -308,17 +286,16 @@
             <button class="btn-tab" onclick="switchTab('search')">
                 <span>🔍</span> ค้นหา
             </button>
-            <a href="?page=index" class="btn-tab" style="text-decoration: none; display: inline-block;">
+            <a href="index.html" class="btn-tab" style="text-decoration: none; display: inline-block;">
                 <span>📸</span> บันทึกใหม่
             </a>
         </div>
     </div>
 
-    <!-- ข้อมูลสถานะ -->
     <div id="statusMessage" class="status-message"></div>
 
     <!-- ส่วนดูทั้งหมด -->
-    <div id="allTab" class="tab-content">
+    <div id="allTab" class="tab-content show">
         <div class="stats" id="statsContainer"></div>
 
         <button class="btn" onclick="loadAllData()">
@@ -329,7 +306,7 @@
     </div>
 
     <!-- ส่วนค้นหา -->
-    <div id="searchTab" class="tab-content" style="display: none;">
+    <div id="searchTab" class="tab-content">
         <div class="search-section">
             <div class="search-group">
                 <input
@@ -351,12 +328,9 @@
 </div>
 
 <script>
-    // ===== 🎯 ตัวแปรสากล =====
-    let allData = [];
-    const RECORDS_PER_PAGE = 10;
-    let currentPage = 1;
+    // 🔄 API URL (ใส่ URL deployment ของคุณ)
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwxcOQgl3jgcZbUgLtQ-rIHikRBw2hGhY4UQVsWhrg2msZAt9OXkOCqCMb8JAprR_YOwg/exec';
 
-    // ===== 📝 ฟังก์ชัน Helper =====
     function showStatus(message, type = 'info') {
         const el = document.getElementById('statusMessage');
         el.className = 'status-message show ' + type;
@@ -374,17 +348,11 @@
         return new Date(date).toLocaleString('th-TH');
     }
 
-    function formatFileName(text) {
-        return text.replace(/^Order_|\.webm$/g, '');
-    }
-
     function switchTab(tabName) {
-        // ซ่อนทั้งหมด
-        document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('show'));
         document.querySelectorAll('.btn-tab').forEach(el => el.classList.remove('active'));
 
-        // แสดง tab ที่เลือก
-        document.getElementById(tabName + 'Tab').style.display = 'block';
+        document.getElementById(tabName + 'Tab').classList.add('show');
         event.target.classList.add('active');
 
         hideStatus();
@@ -394,12 +362,15 @@
         }
     }
 
-    // ===== 📥 โหลดข้อมูลทั้งหมด =====
     function loadAllData() {
         showStatus('<span>⏳</span> กำลังโหลดข้อมูล...', 'info');
 
-        google.script.run
-            .withSuccessHandler((response) => {
+        // 🔄 เรียก API ผ่าน fetch แทน google.script.run
+        fetch(API_URL + '?action=getAll', {
+            method: 'GET'
+        })
+            .then(response => response.json())
+            .then((response) => {
                 if (response.status === 'empty') {
                     displayEmptyState('ยังไม่มีข้อมูลในระบบ');
                     return;
@@ -410,24 +381,19 @@
                     return;
                 }
 
-                allData = response.records || [];
-                currentPage = 1;
-
                 // แสดงสถิติ
                 displayStats(response);
 
                 // แสดงตาราง
-                displayTable(allData);
+                displayTable(response.records);
 
                 showStatus('✅ โหลดข้อมูลเรียบร้อย (' + response.total + ' รายการ)', 'success');
             })
-            .withFailureHandler((error) => {
+            .catch((error) => {
                 showStatus('❌ ข้อผิดพลาด: ' + error, 'error');
-            })
-            .getAllPackingData();
+            });
     }
 
-    // ===== 🔍 ค้นหาข้อมูล =====
     function searchData() {
         const query = document.getElementById('searchInput').value.trim();
         const searchType = document.getElementById('searchType').value;
@@ -439,8 +405,11 @@
 
         showStatus('<span>⏳</span> กำลังค้นหา...', 'info');
 
-        google.script.run
-            .withSuccessHandler((response) => {
+        fetch(API_URL + '?action=search&query=' + encodeURIComponent(query) + '&type=' + searchType, {
+            method: 'GET'
+        })
+            .then(response => response.json())
+            .then((response) => {
                 if (response.status === 'notfound') {
                     displayEmptyState('ไม่พบข้อมูล: ' + query);
                     return;
@@ -456,13 +425,11 @@
 
                 showStatus('✅ พบ ' + response.found + ' รายการ', 'success');
             })
-            .withFailureHandler((error) => {
+            .catch((error) => {
                 showStatus('❌ ข้อผิดพลาด: ' + error, 'error');
-            })
-            .searchPackingData(query, searchType);
+            });
     }
 
-    // ===== 📊 แสดงสถิติ =====
     function displayStats(response) {
         const statsContainer = document.getElementById('statsContainer');
         const total = response.total || 0;
@@ -479,7 +446,6 @@
         `;
     }
 
-    // ===== 📋 แสดงตาราง =====
     function displayTable(records) {
         const container = document.getElementById('tableContainer');
         container.innerHTML = createTable(records);
@@ -527,7 +493,6 @@
         return html;
     }
 
-    // ===== 🚫 สถานะว่างเปล่า =====
     function displayEmptyState(message) {
         const container = document.getElementById('tableContainer') || document.getElementById('searchTableContainer');
         container.innerHTML = `
@@ -539,7 +504,6 @@
         `;
     }
 
-    // ===== 🚀 โหลดเมื่อเปิดหน้า =====
     window.addEventListener('load', () => {
         loadAllData();
     });
