@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายงานวิดีโอการแพ็คสินค้า</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-tab {
+            padding: 10px 20px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .btn-tab:hover {
+            border-color: #667eea;
+        }
+
+        .search-section {
+            background: #f9f9ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .search-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .search-group input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-group select {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .status-message.show {
+            display: block;
+        }
+
+        .status-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table thead {
+            background: #f5f5f5;
+            border-bottom: 2px solid #ddd;
+        }
+
+        table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+            color: #333;
+        }
+
+        table td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        table tbody tr:hover {
+            background: #f9f9ff;
+        }
+
+        .download-btn {
+            padding: 6px 12px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+
+        .download-btn:hover {
+            background: #218838;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h2 {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: #999;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .pagination button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .search-group {
+                flex-direction: column;
+            }
+
+            .search-group input,
+            .search-group select {
+                width: 100%;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            table th,
+            table td {
+                padding: 10px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- ส่วน Header -->
+    <div class="header">
+        <h1>📊 รายงานวิดีโอการแพ็คสินค้า</h1>
+        <div class="header-actions">
+            <button class="btn-tab active" onclick="switchTab('all')">
+                <span>📋</span> ดูทั้งหมด
+            </button>
+            <button class="btn-tab" onclick="switchTab('search')">
+                <span>🔍</span> ค้นหา
+            </button>
+            <a href="?page=index" class="btn-tab" style="text-decoration: none; display: inline-block;">
+                <span>📸</span> บันทึกใหม่
+            </a>
+        </div>
+    </div>
+
+    <!-- ข้อมูลสถานะ -->
+    <div id="statusMessage" class="status-message"></div>
+
+    <!-- ส่วนดูทั้งหมด -->
+    <div id="allTab" class="tab-content">
+        <div class="stats" id="statsContainer"></div>
+
+        <button class="btn" onclick="loadAllData()">
+            🔄 โหลดข้อมูล
+        </button>
+
+        <div class="table-container" id="tableContainer"></div>
+    </div>
+
+    <!-- ส่วนค้นหา -->
+    <div id="searchTab" class="tab-content" style="display: none;">
+        <div class="search-section">
+            <div class="search-group">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="ค้นหา Order ID หรือ Ticket ID"
+                    onkeypress="if(event.key==='Enter') searchData()"
+                >
+                <select id="searchType">
+                    <option value="order">📦 Order ID</option>
+                    <option value="ticket">🎫 Ticket ID</option>
+                </select>
+                <button class="btn" onclick="searchData()">🔍 ค้นหา</button>
+            </div>
+        </div>
+
+        <div class="table-container" id="searchTableContainer"></div>
+    </div>
+</div>
+
+<script>
+    // ===== 🎯 ตัวแปรสากล =====
+    let allData = [];
+    const RECORDS_PER_PAGE = 10;
+    let currentPage = 1;
+
+    // ===== 📝 ฟังก์ชัน Helper =====
+    function showStatus(message, type = 'info') {
+        const el = document.getElementById('statusMessage');
+        el.className = 'status-message show ' + type;
+        el.innerHTML = message;
+    }
+
+    function hideStatus() {
+        const el = document.getElementById('statusMessage');
+        el.classList.remove('show');
+    }
+
+    function formatDate(date) {
+        if (!date) return "-";
+        if (typeof date === 'string') date = new Date(date);
+        return new Date(date).toLocaleString('th-TH');
+    }
+
+    function formatFileName(text) {
+        return text.replace(/^Order_|\.webm$/g, '');
+    }
+
+    function switchTab(tabName) {
+        // ซ่อนทั้งหมด
+        document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.btn-tab').forEach(el => el.classList.remove('active'));
+
+        // แสดง tab ที่เลือก
+        document.getElementById(tabName + 'Tab').style.display = 'block';
+        event.target.classList.add('active');
+
+        hideStatus();
+
+        if (tabName === 'all') {
+            loadAllData();
+        }
+    }
+
+    // ===== 📥 โหลดข้อมูลทั้งหมด =====
+    function loadAllData() {
+        showStatus('<span>⏳</span> กำลังโหลดข้อมูล...', 'info');
+
+        google.script.run
+            .withSuccessHandler((response) => {
+                if (response.status === 'empty') {
+                    displayEmptyState('ยังไม่มีข้อมูลในระบบ');
+                    return;
+                }
+
+                if (response.status !== 'success') {
+                    showStatus('❌ ' + response.message, 'error');
+                    return;
+                }
+
+                allData = response.records || [];
+                currentPage = 1;
+
+                // แสดงสถิติ
+                displayStats(response);
+
+                // แสดงตาราง
+                displayTable(allData);
+
+                showStatus('✅ โหลดข้อมูลเรียบร้อย (' + response.total + ' รายการ)', 'success');
+            })
+            .withFailureHandler((error) => {
+                showStatus('❌ ข้อผิดพลาด: ' + error, 'error');
+            })
+            .getAllPackingData();
+    }
+
+    // ===== 🔍 ค้นหาข้อมูล =====
+    function searchData() {
+        const query = document.getElementById('searchInput').value.trim();
+        const searchType = document.getElementById('searchType').value;
+
+        if (!query) {
+            showStatus('⚠️ กรุณาใส่เลข Order หรือ Ticket ID', 'error');
+            return;
+        }
+
+        showStatus('<span>⏳</span> กำลังค้นหา...', 'info');
+
+        google.script.run
+            .withSuccessHandler((response) => {
+                if (response.status === 'notfound') {
+                    displayEmptyState('ไม่พบข้อมูล: ' + query);
+                    return;
+                }
+
+                if (response.status !== 'success') {
+                    showStatus('❌ ' + response.message, 'error');
+                    return;
+                }
+
+                const searchTableContainer = document.getElementById('searchTableContainer');
+                searchTableContainer.innerHTML = createTable(response.records);
+
+                showStatus('✅ พบ ' + response.found + ' รายการ', 'success');
+            })
+            .withFailureHandler((error) => {
+                showStatus('❌ ข้อผิดพลาด: ' + error, 'error');
+            })
+            .searchPackingData(query, searchType);
+    }
+
+    // ===== 📊 แสดงสถิติ =====
+    function displayStats(response) {
+        const statsContainer = document.getElementById('statsContainer');
+        const total = response.total || 0;
+
+        statsContainer.innerHTML = `
+            <div class="stat-card">
+                <div class="stat-number">${total}</div>
+                <div class="stat-label">📦 รวมรายการ</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">${new Date().toLocaleDateString('th-TH')}</div>
+                <div class="stat-label">📅 วันที่ปัจจุบัน</div>
+            </div>
+        `;
+    }
+
+    // ===== 📋 แสดงตาราง =====
+    function displayTable(records) {
+        const container = document.getElementById('tableContainer');
+        container.innerHTML = createTable(records);
+    }
+
+    function createTable(records) {
+        if (!records || records.length === 0) {
+            return displayEmptyState('ไม่มีข้อมูล');
+        }
+
+        let html = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>📅 วันเวลา</th>
+                        <th>📦 Order ID</th>
+                        <th>🎫 Ticket ID</th>
+                        <th>⚙️ การดำเนินการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        records.forEach((record, index) => {
+            const hasVideo = record.videoUrl && record.videoUrl.trim() !== '';
+            const downloadBtn = hasVideo
+                ? `<a href="${record.videoUrl}" class="download-btn" target="_blank" rel="noopener">⬇️ ดาวน์โหลด</a>`
+                : '<span style="color: #999;">ไม่มีไฟล์</span>';
+
+            html += `
+                <tr>
+                    <td>${formatDate(record.date)}</td>
+                    <td><strong>${record.order}</strong></td>
+                    <td>${record.ticket}</td>
+                    <td>${downloadBtn}</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                </tbody>
+            </table>
+        `;
+
+        return html;
+    }
+
+    // ===== 🚫 สถานะว่างเปล่า =====
+    function displayEmptyState(message) {
+        const container = document.getElementById('tableContainer') || document.getElementById('searchTableContainer');
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <h2>${message}</h2>
+                <p>ยังไม่มีข้อมูลการแพ็คสินค้า</p>
+            </div>
+        `;
+    }
+
+    // ===== 🚀 โหลดเมื่อเปิดหน้า =====
+    window.addEventListener('load', () => {
+        loadAllData();
+    });
+</script>
+
+</body>
+</html>

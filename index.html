@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบบันทึกการแพ็คสินค้า</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 700px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .form-group input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #f9f9ff;
+        }
+
+        .form-group input::placeholder {
+            color: #aaa;
+        }
+
+        .camera-section {
+            margin-bottom: 25px;
+        }
+
+        .btn-init {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-init:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-init:active {
+            transform: translateY(0);
+        }
+
+        #preview {
+            width: 100%;
+            background: #000;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .preview-visible {
+            display: block !important;
+        }
+
+        .controls {
+            display: none;
+            justify-content: center;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .controls.active {
+            display: flex;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+        }
+
+        .btn-stop:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(220, 53, 69, 0.4);
+        }
+
+        .timer {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            min-width: 100px;
+            text-align: center;
+            border: 2px solid #ffc107;
+        }
+
+        .status {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+
+        .permission-message {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .icon {
+            margin-right: 8px;
+        }
+
+        .debug-info {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+            max-height: 100px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .timer {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h1>📦 บันทึกการแพ็คสินค้า</h1>
+            <a href="?page=report" style="padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">
+                📊 ดูรายงาน
+            </a>
+        </div>
+        <p>ระบบบันทึกวิดีโอพร้อมข้อมูล Order และ Ticket</p>
+    </div>
+
+    <!-- ข้อมูลการขออนุญาติ -->
+    <div class="permission-message">
+        <span class="icon">🔐</span>
+        <strong>ต้องให้สิทธิ์เข้าถึงกล้อง</strong> เมื่อเปิดแอปแรกครั้ง
+    </div>
+
+    <!-- แสดงสถานะ -->
+    <div id="status" class="status"></div>
+
+    <!-- ข้อมูล Order & Ticket -->
+    <div class="form-group">
+        <input type="text" id="order" placeholder="📦 Order ID" autofocus>
+        <input type="text" id="ticket" placeholder="🎫 Ticket ID">
+    </div>
+
+    <!-- ส่วนกล้อง -->
+    <div class="camera-section">
+        <button id="btnInit" class="btn-init">
+            <span class="icon">📸</span>เปิดกล้อง
+        </button>
+        <canvas id="preview" width="640" height="360"></canvas>
+    </div>
+
+    <!-- ปุ่มควบคุม -->
+    <div class="controls" id="controls">
+        <button id="btnStart" class="btn btn-start">
+            <span class="icon">🔴</span>เริ่มบันทึก
+        </button>
+        <button id="btnStop" class="btn btn-stop">
+            <span class="icon">⏹️</span>หยุด & ส่ง
+        </button>
+        <div class="timer" id="timer">00:30</div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div id="progressContainer" style="display: none; margin-top: 20px;">
+        <div style="background: #e0e0e0; border-radius: 8px; height: 20px; overflow: hidden;">
+            <div id="progressBar" style="background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); height: 100%; width: 0%; transition: width 0.3s;"></div>
+        </div>
+        <div id="progressText" style="text-align: center; margin-top: 8px; font-size: 12px; color: #666;"></div>
+    </div>
+
+    <!-- ข้อมูลดีบัก -->
+    <div class="debug-info" id="debug">
+        พร้อมใช้งาน ✅
+    </div>
+</div>
+
+<script>
+    // ===== 🎥 ตั้งค่าองค์ประกอบ =====
+    const canvas = document.getElementById('preview');
+    const ctx = canvas.getContext('2d');
+    const video = document.createElement('video');
+    const statusEl = document.getElementById('status');
+    const debugEl = document.getElementById('debug');
+
+    video.setAttribute('autoplay', '');
+    video.setAttribute('muted', '');
+    video.setAttribute('playsinline', '');
+
+    let mediaRecorder;
+    let chunks = [];
+    let countdownInterval;
+    let isRecording = false;
+
+    // ===== 📝 ฟังก์ชัน Debug =====
+    function log(message) {
+        console.log(message);
+        debugEl.textContent = new Date().toLocaleTimeString('th-TH') + ' - ' + message;
+    }
+
+    function showStatus(message, type = 'info') {
+        statusEl.className = 'status show ' + type;
+        statusEl.innerHTML = message;
+        log(message);
+    }
+
+    // ===== 🎬 เปิดกล้อง =====
+    document.getElementById('btnInit').onclick = async () => {
+        try {
+            showStatus('<span class="icon">⏳</span>กำลังขออนุญาติกล้อง...', 'info');
+            log('พยายามเข้าถึงกล้อง...');
+
+            const constraints = {
+                video: {
+                    width: { ideal: 640 },
+                    height: { ideal: 360 },
+                    facingMode: 'environment'
+                },
+                audio: false
+            };
+
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            log('✅ ได้รับ stream จากกล้อง');
+
+            video.srcObject = stream;
+
+            video.onloadedmetadata = () => {
+                log('✅ video metadata loaded');
+                video.play();
+                drawFrame();
+
+                document.getElementById('btnInit').style.display = 'none';
+                document.getElementById('preview').classList.add('preview-visible');
+                document.getElementById('controls').classList.add('active');
+
+                showStatus('<span class="icon">✅</span>กล้องพร้อมใช้งาน - กรอก Order ID และคลิก "เริ่มบันทึก"', 'success');
+            };
+
+            video.onerror = (err) => {
+                showStatus('<span class="icon">❌</span>ข้อผิดพลาดในการเล่นวิดีโอ: ' + err, 'error');
+                log('❌ Video error: ' + err);
+            };
+
+        } catch (err) {
+            const errorMsg = err.name === 'NotAllowedError'
+                ? 'ไม่ได้รับอนุญาติเข้าถึงกล้อง - โปรดตรวจสอบการตั้งค่าเบราว์เซอร์'
+                : 'ไม่พบกล้อง: ' + err.message;
+
+            showStatus('<span class="icon">❌</span>' + errorMsg, 'error');
+            log('❌ Error: ' + err.toString());
+        }
+    };
+
+    // ===== 🎨 วาดหน้าจอ Overlay =====
+    function drawFrame() {
+        if (!video.srcObject) return;
+
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // พื้นหลังข้อมูล
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(10, 10, 280, 100);
+
+        // ข้อความ
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText('🕒 ' + new Date().toLocaleTimeString('th-TH'), 20, 35);
+        ctx.fillText('📦 Order: ' + (document.getElementById('order').value || '-'), 20, 60);
+        ctx.fillText('🎫 Ticket: ' + (document.getElementById('ticket').value || '-'), 20, 85);
+
+        if (isRecording) {
+            ctx.fillStyle = '#ff4444';
+            ctx.fillRect(canvas.width - 40, 10, 30, 30);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 20px Arial';
+            ctx.fillText('●', canvas.width - 32, 35);
+        }
+
+        requestAnimationFrame(drawFrame);
+    }
+
+    // ===== ⏹️ เริ่มบันทึก =====
+    document.getElementById('btnStart').onclick = () => {
+        if (!document.getElementById('order').value) {
+            showStatus('<span class="icon">⚠️</span>กรุณาใส่ Order ID ก่อน', 'warning');
+            return;
+        }
+
+        chunks = [];
+        isRecording = true;
+
+        try {
+            const captureStream = canvas.captureStream(30);
+            log('✅ Capture stream created');
+
+            mediaRecorder = new MediaRecorder(captureStream, {
+                mimeType: 'video/webm;codecs=vp8,opus',
+                videoBitsPerSecond: 500000  // ลดคุณภาพเพื่อให้ upload เร็วขึ้น
+            });
+
+            log('✅ MediaRecorder created, mimeType: ' + mediaRecorder.mimeType);
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    chunks.push(e.data);
+                    log('📊 Data available: ' + e.data.size + ' bytes');
+                }
+            };
+
+            mediaRecorder.onstop = upload;
+
+            mediaRecorder.onerror = (err) => {
+                showStatus('<span class="icon">❌</span>ข้อผิดพลาดในการบันทึก: ' + err.error, 'error');
+                log('❌ MediaRecorder error: ' + err.error);
+                isRecording = false;
+            };
+
+            mediaRecorder.start();
+            log('✅ MediaRecorder started');
+
+            document.getElementById('btnStart').style.display = 'none';
+            document.getElementById('btnStop').style.display = 'inline-block';
+
+            showStatus('<span class="icon">🔴</span>กำลังบันทึก...', 'info');
+
+            // Countdown Timer (30 วินาที)
+            let seconds = 30;
+            countdownInterval = setInterval(() => {
+                seconds--;
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                document.getElementById('timer').textContent =
+                    mins.toString().padStart(2, '0') + ':' + secs.toString().padStart(2, '0');
+
+                if (seconds <= 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById('btnStop').click();
+                }
+            }, 1000);
+
+        } catch (err) {
+            showStatus('<span class="icon">❌</span>ข้อผิดพลาด: ' + err.toString(), 'error');
+            log('❌ Error: ' + err.toString());
+            isRecording = false;
+        }
+    };
+
+    // ===== 🛑 หยุดบันทึก =====
+    document.getElementById('btnStop').onclick = () => {
+        isRecording = false;
+        mediaRecorder.stop();
+        clearInterval(countdownInterval);
+        log('✅ Recording stopped');
+    };
+
+    // ===== 📤 ส่งข้อมูล =====
+    function upload() {
+        try {
+            if (chunks.length === 0) {
+                showStatus('<span class="icon">❌</span>ไม่มีข้อมูลวิดีโอ', 'error');
+                return;
+            }
+
+            showStatus('<span class="icon">⏳</span>กำลังประมวลผลข้อมูล...', 'info');
+            log('📦 Chunks collected: ' + chunks.length + ' ชิ้น');
+
+            const blob = new Blob(chunks, { type: 'video/webm' });
+            log('✅ Blob created: ' + blob.size + ' bytes (' + (blob.size / 1024 / 1024).toFixed(2) + ' MB)');
+
+            const reader = new FileReader();
+
+            // แสดง Progress Bar
+            const progressContainer = document.getElementById('progressContainer');
+            progressContainer.style.display = 'block';
+
+            reader.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const percent = (e.loaded / e.total) * 100;
+                    document.getElementById('progressBar').style.width = percent + '%';
+                    document.getElementById('progressText').innerText = 'กำลังแปลง: ' + percent.toFixed(0) + '%';
+                }
+            };
+
+            reader.readAsDataURL(blob);
+
+            reader.onloadend = () => {
+                const base64 = reader.result.split(',')[1];
+                log('✅ Base64 encoded: ' + base64.length + ' characters');
+
+                document.getElementById('progressBar').style.width = '100%';
+                document.getElementById('progressText').innerText = 'กำลังอัปโหลด...';
+
+                showStatus('<span class="icon">☁️</span>กำลังอัปโหลดไปยัง Google Drive...', 'info');
+
+                google.script.run
+                    .withSuccessHandler((response) => {
+                        log('✅ Server response: ' + JSON.stringify(response));
+                        progressContainer.style.display = 'none';
+
+                        if (response.status === 'success') {
+                            showStatus(
+                                '<span class="icon">✅</span><strong>' + response.message + '</strong><br>' +
+                                'File: ' + response.filename,
+                                'success'
+                            );
+
+                            // Reset
+                            document.getElementById('order').value = '';
+                            document.getElementById('ticket').value = '';
+                            document.getElementById('btnStop').style.display = 'none';
+                            document.getElementById('btnStart').style.display = 'inline-block';
+                            document.getElementById('timer').textContent = '00:30';
+                            document.getElementById('order').focus();
+                            chunks = [];
+                        } else {
+                            showStatus('<span class="icon">❌</span>' + response.message, 'error');
+                        }
+                    })
+                    .withFailureHandler((error) => {
+                        progressContainer.style.display = 'none';
+                        showStatus('<span class="icon">❌</span>ข้อผิดพลาดจากเซิร์ฟเวอร์: ' + error, 'error');
+                        log('❌ Server error: ' + error);
+                    })
+                    .savePackingData({
+                        base64: base64,
+                        order: document.getElementById('order').value,
+                        ticket: document.getElementById('ticket').value
+                    });
+            };
+
+            reader.onerror = () => {
+                progressContainer.style.display = 'none';
+                showStatus('<span class="icon">❌</span>ข้อผิดพลาดในการอ่านไฟล์', 'error');
+                log('❌ FileReader error');
+            };
+
+        } catch (err) {
+            showStatus('<span class="icon">❌</span>ข้อผิดพลาด: ' + err.toString(), 'error');
+            log('❌ Error: ' + err.toString());
+        }
+    }
+
+    // ===== 🚀 เริ่มต้น =====
+    window.addEventListener('load', () => {
+        log('✅ Page loaded');
+        showStatus('<span class="icon">👋</span>ยินดีต้อนรับ - คลิก "เปิดกล้อง" เพื่อเริ่มต้น', 'info');
+    });
+</script>
+
+</body>
+</html>
