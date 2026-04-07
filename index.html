@@ -250,6 +250,10 @@
         <input type="text" id="ticket" placeholder="🎫 Ticket ID">
     </div>
 
+    <div class="form-group">
+        <input type="text" id="packer" placeholder="👤 ชื่อพนักงาน">
+    </div>
+
     <div class="camera-section">
         <button id="btnInit" class="btn-init">
             <span class="icon">📸</span>เปิดกล้อง
@@ -296,7 +300,7 @@
     let isRecording = false;
 
     // 🔄 API URL (ใส่ URL deployment ของคุณ)
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwxcOQgl3jgcZbUgLtQ-rIHikRBw2hGhY4UQVsWhrg2msZAt9OXkOCqCMb8JAprR_YOwg/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzGyhV-GJ3VpcE-Q0Nm4aqCq4nMVzbhNJ-CBHy-MQ-mEawXteeVuXFOfGPKajQr0x2rhQ/exec';
 
     function log(message) {
         console.log(message);
@@ -363,6 +367,7 @@
         ctx.fillText('🕒 ' + new Date().toLocaleTimeString('th-TH'), 20, 35);
         ctx.fillText('📦 Order: ' + (document.getElementById('order').value || '-'), 20, 60);
         ctx.fillText('🎫 Ticket: ' + (document.getElementById('ticket').value || '-'), 20, 85);
+        ctx.fillText('👤 ' + (document.getElementById('packer').value || '-'), 20, 110);
 
         if (isRecording) {
             ctx.fillStyle = '#ff4444';
@@ -486,7 +491,8 @@
                     body: JSON.stringify({
                         base64: base64,
                         order: document.getElementById('order').value,
-                        ticket: document.getElementById('ticket').value
+                        ticket: document.getElementById('ticket').value,
+                        packer: document.getElementById('packer').value
                     })
                 })
                     .then(response => response.json())
@@ -503,6 +509,7 @@
 
                             document.getElementById('order').value = '';
                             document.getElementById('ticket').value = '';
+                            document.getElementById('packer').value = '';
                             document.getElementById('btnStop').style.display = 'none';
                             document.getElementById('btnStart').style.display = 'inline-block';
                             document.getElementById('timer').textContent = '00:30';
