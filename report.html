@@ -329,7 +329,7 @@
 
 <script>
     // 🔄 API URL (ใส่ URL deployment ของคุณ)
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwxcOQgl3jgcZbUgLtQ-rIHikRBw2hGhY4UQVsWhrg2msZAt9OXkOCqCMb8JAprR_YOwg/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzGyhV-GJ3VpcE-Q0Nm4aqCq4nMVzbhNJ-CBHy-MQ-mEawXteeVuXFOfGPKajQr0x2rhQ/exec';
 
     function showStatus(message, type = 'info') {
         const el = document.getElementById('statusMessage');
@@ -463,6 +463,7 @@
                         <th>📅 วันเวลา</th>
                         <th>📦 Order ID</th>
                         <th>🎫 Ticket ID</th>
+                        <th>👤 ชื่อพนักงาน</th>
                         <th>⚙️ การดำเนินการ</th>
                     </tr>
                 </thead>
@@ -480,6 +481,7 @@
                     <td>${formatDate(record.date)}</td>
                     <td><strong>${record.order}</strong></td>
                     <td>${record.ticket}</td>
+                    <td>${record.packer || '-'}</td>
                     <td>${downloadBtn}</td>
                 </tr>
             `;
